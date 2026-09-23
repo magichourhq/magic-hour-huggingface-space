@@ -1,0 +1,2 @@
+gradio==5.49.1
+magic_hour==0.82.0
