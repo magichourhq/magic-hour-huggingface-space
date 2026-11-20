@@ -115,7 +115,7 @@ Generate media with the [Magic Hour API](https://magichour.ai/api). Your API key
             placeholder="A paper dragon unfolds and flies across an illustrator's desk",
         )
         with gr.Row():
-            duration = gr.Slider(1, 10, value=5, step=1, label="Duration (seconds)")
+            duration = gr.Slider(4, 10, value=5, step=1, label="Duration (seconds)")
             video_aspect = gr.Dropdown(
                 ["16:9", "9:16", "1:1"], value="16:9", label="Aspect ratio"
             )
