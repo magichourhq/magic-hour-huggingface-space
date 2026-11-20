@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magic Hour AI Image and Video Generator</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --fg: #18181b;
+        --muted: #71717a;
+        --line: #e4e4e7;
+        --field: #fafafa;
+        --accent: #6d28d9;
+        --accent-fg: #ffffff;
+        --error: #b91c1c;
+        color-scheme: light dark;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #09090b;
+          --fg: #fafafa;
+          --muted: #a1a1aa;
+          --line: #27272a;
+          --field: #18181b;
+          --accent: #a78bfa;
+          --accent-fg: #09090b;
+          --error: #f87171;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+      h1 { font-size: 24px; margin: 0 0 4px; }
+      p { margin: 0 0 16px; }
+      .muted { color: var(--muted); }
+      a { color: var(--accent); }
+      label { display: block; font-weight: 600; margin: 16px 0 6px; }
+      input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--field);
+        color: var(--fg);
+        font: inherit;
+      }
+      textarea { resize: vertical; min-height: 84px; }
+      .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
+      .check { display: flex; align-items: center; gap: 8px; font-weight: normal; }
+      .check input { width: auto; }
+      .tabs { display: flex; gap: 4px; margin-top: 24px; border-bottom: 1px solid var(--line); }
+      .tabs button {
+        padding: 8px 14px;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        background: none;
+        color: var(--muted);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+      .generate {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--accent-fg);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .generate:disabled { opacity: 0.6; cursor: wait; }
+      .status { margin-top: 16px; min-height: 1.5em; }
+      .status.error { color: var(--error); }
+      .result img, .result video { display: block; width: 100%; margin-top: 12px; border-radius: 8px; }
+      footer { margin-top: 32px; font-size: 13px; }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Magic Hour AI Image and Video Generator</h1>
+      <p class="muted">
+        Generate images and videos with the <a href="https://magichour.ai/api" target="_blank" rel="noreferrer">Magic Hour API</a>.
+        Generations use credits from your Magic Hour account.
+      </p>
+
+      <label for="key">Magic Hour API key</label>
+      <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="Create a key at magichour.ai/developer" />
+      <p class="muted" style="margin-top: 6px">
+        Your key goes straight from your browser to api.magichour.ai. This page doesn't store or send it anywhere else.
+      </p>
+
+      <div class="tabs" role="tablist">
+        <button role="tab" aria-selected="true" aria-controls="image-panel" id="image-tab">Image</button>
+        <button role="tab" aria-selected="false" aria-controls="video-panel" id="video-tab">Text to video</button>
+      </div>
+
+      <form id="image-panel" role="tabpanel" aria-labelledby="image-tab">
+        <label for="image-prompt">Prompt</label>
+        <textarea id="image-prompt" required placeholder="A glass greenhouse floating above a cloud city at sunrise"></textarea>
+        <div class="row">
+          <div>
+            <label for="image-aspect">Aspect ratio</label>
+            <select id="image-aspect">
+              <option>1:1</option><option>16:9</option><option>9:16</option><option>4:3</option><option>3:4</option>
+            </select>
+          </div>
+          <div>
+            <label for="image-resolution">Resolution</label>
+            <select id="image-resolution">
+              <option>640px</option><option selected>1k</option><option>2k</option>
+            </select>
+          </div>
+        </div>
+        <button class="generate" type="submit">Generate image</button>
+        <div class="status" role="status"></div>
+        <div class="result"></div>
+      </form>
+
+      <form id="video-panel" role="tabpanel" aria-labelledby="video-tab" hidden>
+        <label for="video-prompt">Prompt</label>
+        <textarea id="video-prompt" required placeholder="A paper dragon unfolds and flies across an illustrator's desk"></textarea>
+        <div class="row">
+          <div>
+            <label for="video-duration">Duration (seconds)</label>
+            <select id="video-duration">
+              <option>4</option><option selected>5</option><option>6</option><option>8</option><option>10</option>
+            </select>
+          </div>
+          <div>
+            <label for="video-aspect">Aspect ratio</label>
+            <select id="video-aspect"><option>16:9</option><option>9:16</option><option>1:1</option></select>
+          </div>
+          <div>
+            <label for="video-resolution">Resolution</label>
+            <select id="video-resolution"><option>480p</option><option>720p</option></select>
+          </div>
+        </div>
+        <label class="check"><input id="video-audio" type="checkbox" /> Include audio when the model supports it</label>
+        <button class="generate" type="submit">Generate video</button>
+        <div class="status" role="status"></div>
+        <div class="result"></div>
+      </form>
+
+      <footer class="muted">
+        <a href="https://docs.magichour.ai" target="_blank" rel="noreferrer">API documentation</a> ·
+        <a href="https://magichour.ai/api" target="_blank" rel="noreferrer">Pricing</a> ·
+        <a href="https://magichour.ai/developer" target="_blank" rel="noreferrer">Get an API key</a> ·
+        <a href="https://github.com/magichourhq/magic-hour-huggingface-space" target="_blank" rel="noreferrer">Source</a>
+      </footer>
+    </main>
+
+    <script type="module">
+      import { MagicHourClient } from "https://cdn.jsdelivr.net/npm/@magichourhq/browser-client@0.3.2/+esm";
+
+      const $ = (selector, root = document) => root.querySelector(selector);
+
+      for (const tab of document.querySelectorAll('[role="tab"]')) {
+        tab.addEventListener("click", () => {
+          for (const other of document.querySelectorAll('[role="tab"]')) {
+            const selected = other === tab;
+            other.setAttribute("aria-selected", String(selected));
+            $("#" + other.getAttribute("aria-controls")).hidden = !selected;
+          }
+        });
+      }
+
+      function setStatus(form, message, isError = false) {
+        const status = $(".status", form);
+        status.textContent = message;
+        status.classList.toggle("error", isError);
+      }
+
+      // Starts one paid generation, waits for it, and shows the result. Never retries the create
+      // request: if it fails, the generation may still have started.
+      async function generate(form, kind, endpoint, body) {
+        const button = $(".generate", form);
+        const result = $(".result", form);
+        let client;
+        try {
+          client = new MagicHourClient({ apiKey: $("#key").value });
+        } catch (error) {
+          setStatus(form, error.message, true);
+          return;
+        }
+        button.disabled = true;
+        result.replaceChildren();
+        setStatus(form, "Starting…");
+        try {
+          const id = await client.create(endpoint, body);
+          setStatus(form, `Generating project ${id}…`);
+          const project = await client.wait(id, kind);
+          const url = project.downloads[0].url;
+          const media = document.createElement(kind === "image" ? "img" : "video");
+          media.src = url;
+          if (kind === "image") media.alt = body.style.prompt;
+          else media.controls = media.loop = media.playsInline = true;
+          result.append(media);
+          setStatus(form, `Project ${id} is complete. ${project.credits_charged} credits charged.`);
+        } catch (error) {
+          setStatus(form, error.message, true);
+        } finally {
+          button.disabled = false;
+        }
+      }
+
+      $("#image-panel").addEventListener("submit", (event) => {
+        event.preventDefault();
+        generate(event.currentTarget, "image", "ai-image-generator", {
+          image_count: 1,
+          style: { prompt: $("#image-prompt").value.trim(), tool: "general" },
+          aspect_ratio: $("#image-aspect").value,
+          resolution: $("#image-resolution").value,
+          name: "Hugging Face Space image",
+        });
+      });
+
+      $("#video-panel").addEventListener("submit", (event) => {
+        event.preventDefault();
+        generate(event.currentTarget, "video", "text-to-video", {
+          end_seconds: Number($("#video-duration").value),
+          style: { prompt: $("#video-prompt").value.trim() },
+          aspect_ratio: $("#video-aspect").value,
+          resolution: $("#video-resolution").value,
+          audio: $("#video-audio").checked,
+          name: "Hugging Face Space video",
+        });
+      });
+    </script>
+  </body>
+</html>
