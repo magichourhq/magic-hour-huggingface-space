@@ -35,7 +35,8 @@
         color: var(--fg);
         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
       }
-      main { max-width: 720px; margin: 0 auto; padding: 32px 16px 48px; }
+      main { max-width: 1120px; margin: 0 auto; padding: 32px 16px 48px; }
+      .intro { max-width: 720px; }
       h1 { font-size: 24px; margin: 0 0 4px; }
       p { margin: 0 0 16px; }
       .muted { color: var(--muted); }
@@ -82,12 +83,21 @@
       .status { margin-top: 16px; min-height: 1.5em; }
       .status.error { color: var(--error); }
       .result img, .result video { display: block; width: 100%; margin-top: 12px; border-radius: 8px; }
+      .output { margin-top: 4px; }
+      .placeholder { margin-top: 12px; padding: 48px 16px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; }
+      .result:not(:empty) + .placeholder { display: none; }
+      /* On wide screens, show the result next to the settings. */
+      @media (min-width: 900px) {
+        form[role="tabpanel"]:not([hidden]) { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+        .output { margin-top: 16px; position: sticky; top: 16px; }
+      }
       footer { margin-top: 32px; font-size: 13px; }
       [hidden] { display: none !important; }
     </style>
   </head>
   <body>
     <main>
+      <div class="intro">
       <h1>Magic Hour AI Image and Video Generator</h1>
       <p class="muted">
         Generate images and videos with the <a href="https://magichour.ai/api" target="_blank" rel="noreferrer">Magic Hour API</a>.
@@ -99,6 +109,7 @@
       <p class="muted" style="margin-top: 6px">
         Your key goes straight from your browser to api.magichour.ai. This page doesn't store or send it anywhere else.
       </p>
+      </div>
 
       <div class="tabs" role="tablist">
         <button role="tab" aria-selected="true" aria-controls="image-panel" id="image-tab">Image</button>
@@ -106,6 +117,7 @@
       </div>
 
       <form id="image-panel" role="tabpanel" aria-labelledby="image-tab">
+        <div class="controls">
         <label for="image-prompt">Prompt</label>
         <textarea id="image-prompt" required placeholder="A glass greenhouse floating above a cloud city at sunrise"></textarea>
         <div class="row">
@@ -118,16 +130,21 @@
           <div>
             <label for="image-resolution">Resolution</label>
             <select id="image-resolution">
-              <option>640px</option><option selected>1k</option><option>2k</option>
+              <option selected>640px</option><option>1k</option><option>2k</option>
             </select>
           </div>
         </div>
         <button class="generate" type="submit">Generate image</button>
-        <div class="status" role="status"></div>
-        <div class="result"></div>
+        </div>
+        <div class="output">
+          <div class="status" role="status"></div>
+          <div class="result"></div>
+          <p class="placeholder muted">Your image appears here.</p>
+        </div>
       </form>
 
       <form id="video-panel" role="tabpanel" aria-labelledby="video-tab" hidden>
+        <div class="controls">
         <label for="video-prompt">Prompt</label>
         <textarea id="video-prompt" required placeholder="A paper dragon unfolds and flies across an illustrator's desk"></textarea>
         <div class="row">
@@ -148,8 +165,12 @@
         </div>
         <label class="check"><input id="video-audio" type="checkbox" /> Include audio when the model supports it</label>
         <button class="generate" type="submit">Generate video</button>
-        <div class="status" role="status"></div>
-        <div class="result"></div>
+        </div>
+        <div class="output">
+          <div class="status" role="status"></div>
+          <div class="result"></div>
+          <p class="placeholder muted">Your video appears here.</p>
+        </div>
       </form>
 
       <footer class="muted">
